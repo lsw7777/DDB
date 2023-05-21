@@ -5,7 +5,7 @@ import (
 	"os"
 )
 
-//主函数
+//主函数，开启client
 func main() {
 	var client Client
 	client.Init(os.Args[1])
