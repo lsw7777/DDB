@@ -357,7 +357,7 @@ func GetBlockOffset(tableName string, tupleOffset int) int {
 	}
 }
 
-获得字节偏移量
+//获得字节偏移量
 func GetByteOffset(tableName string, tupleOffset int) int {
 	storeLen := GetStoreLength(tableName)
 	tupleInFirst := (buffermanager.BLOCKSIZE - 4) / storeLen
