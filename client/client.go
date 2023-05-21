@@ -10,10 +10,12 @@ import (
 	"strings"
 )
 
+//取代字符串
 func ReplaceAll(str, old, new string) string {
 	return strings.Replace(str, old, new, -1)
 }
 
+//客户端结构体
 type Client struct {
 	ipCache      map[string]string
 	rpcMaster    *rpc.Client
@@ -22,6 +24,7 @@ type Client struct {
 
 type TableOp int
 
+//定义SQL不同操作的OPCODE值
 const (
 	CREATE_TBL = 0
 	DROP_TBL   = 1
@@ -32,6 +35,7 @@ const (
 	OTHERS     = 6
 )
 
+//初始化并返回一个client结构体变量
 func (client *Client) Init(masterIP string) {
 	client.ipCache = make(map[string]string)
 	client.rpcRegionMap = make(map[string]*rpc.Client)
@@ -44,14 +48,14 @@ func (client *Client) Init(masterIP string) {
 
 }
 
+//根据预处理得到的信息，实现用户SQL输入命令与数据库的交互
 func (client *Client) Run() {
 	execFileMode := false
 	var commands []string
 	indexOfCommand := 0
 	for {
-		input := "" // user's complete input
+		input := ""
 		if execFileMode {
-			// execute SQL from a txt
 			input = commands[indexOfCommand]
 			input = strings.Trim(input, " ")
 			indexOfCommand += 1
@@ -61,9 +65,7 @@ func (client *Client) Run() {
 				commands = commands[0:0]
 			}
 		} else {
-			// read a complete sql from keyboard, store it in input
 			fmt.Println("new message>>> input your SQL command: ")
-			// input := ""      // user's complete input
 			part_input := "" // part of the input, all of them compose input
 
 			for len(part_input) == 0 || part_input[len(part_input)-1] != ';' {
@@ -131,7 +133,6 @@ func (client *Client) Run() {
 				fmt.Println("RESULT>>> create table succeed, table in ip: " + ip)
 			}
 		case DROP_TBL:
-			// call Master.DropTable rpc
 			args, dummy := TableArgs{Table: table, SQL: input}, false
 			call, err := TimeoutRPC(client.rpcMaster.Go("Master.DropTable", &args, &dummy, nil), TIMEOUT_M)
 			if err != nil {
@@ -144,8 +145,6 @@ func (client *Client) Run() {
 				fmt.Println("RESULT>>> drop table succeed")
 			}
 		case SHOW_TBL:
-			// 把所有region的table名显示出来
-			// TODO: call Master.ShowTables and format output
 			var dummyArgs bool
 			var tables []string
 			// tables = make([]string, 0)
@@ -165,8 +164,6 @@ func (client *Client) Run() {
 			}
 
 		case CREATE_IDX:
-			// TODO: call Master.CreateIndex
-			// TODO: 返回的ip是要update tableip map吗？
 			args, ip := IndexArgs{Index: index, Table: table, SQL: input}, ""
 			call, err := TimeoutRPC(client.rpcMaster.Go("Master.CreateIndex", &args, &ip, nil), TIMEOUT_M)
 			if err != nil {
@@ -179,7 +176,6 @@ func (client *Client) Run() {
 				fmt.Printf("RESULT>>> create index succeed on table %v in %v\n", table, ip)
 			}
 		case DROP_IDX:
-			// TODO: call Master.DropIndex
 			args, dummy := IndexArgs{Index: index, SQL: input}, false
 			call, err := TimeoutRPC(client.rpcMaster.Go("Master.DropIndex", &args, &dummy, nil), TIMEOUT_M)
 			if err != nil {
@@ -192,10 +188,8 @@ func (client *Client) Run() {
 				fmt.Println("RESULT>>> drop indexes succeed")
 			}
 		case SHOW_IDX:
-			// TODO: call Master.ShowIndices and format output
 			var dummyArgs bool
 			var indices map[string]string
-			// indices = make(map[string]string)
 			call, err := TimeoutRPC(client.rpcMaster.Go("Master.ShowIndices", &dummyArgs, &indices, nil), TIMEOUT_S)
 			if err != nil {
 				fmt.Println("SYSTEM HINT>>> timeout, master down!")
@@ -211,7 +205,6 @@ func (client *Client) Run() {
 				fmt.Println("---------------")
 			}
 		case OTHERS:
-			// by default: only ip in ipCache, rpcregion will exist in rpcmap
 			ip, ok := client.ipCache[table]
 			if !ok {
 				ip = client.updateCache(table)
@@ -222,23 +215,14 @@ func (client *Client) Run() {
 			} else {
 				fmt.Println("SYSTEM HINT>>> first phase: find corresponding ip in table-ip cache: " + ip)
 			}
-			// call Region.Process rpc with ip var
 			result := ""
-			// obtain regionRPC
 			rpcRegion, ok := client.rpcRegionMap[ip]
 			if !ok {
-				// fmt.Printf("region not in RPCcache, add it to map")
 				rpcRegion, err = rpc.DialHTTP("tcp", ip+REGION_PORT)
 				if err != nil {
-					// fmt.Println("fail to connect to region: " + ip)
-					// fmt.Println("IP is new but can't connect")
 					delete(client.ipCache, table)
 					break
 				} else {
-					// _, ok := client.ipCache[table]
-					// if !ok {
-					// 	fmt.Println("[正常情况下不会出现此打印]no ip-table cache in map")
-					// }
 					client.rpcRegionMap[ip] = rpcRegion
 				}
 			}
@@ -249,28 +233,22 @@ func (client *Client) Run() {
 					fmt.Println("SYSTEM HINT>>> region process timeout")
 					fmt.Println("SYSTEM HINT>>> start to reconnect with second phase operation...")
 				} else {
-					//TODO: 这里的error有可能是sql错误导致或者ip旧了rpcRegion拿不到导致
 					fmt.Println("SYSTEM HINT>>> can't obtain result in first phase, maybe old ip or SQL command error")
 					fmt.Println("SYSTEM HINT>>> start second phase operation...")
 				}
 
-				// ip, rpcRegion is old，select for twice
-				// first delete old cache
 				delete(client.ipCache, table)
 				delete(client.rpcRegionMap, ip)
 				new_ip := client.updateCache(table) // obtain newest ip
 				if new_ip == "" {
-					// fmt.Println("can't find the ip which table in")
 					break
 				}
-				// obtain newest rpcRegion and update map
 				new_rpcRegion, err := rpc.DialHTTP("tcp", new_ip+REGION_PORT)
 				if err != nil {
 					fmt.Printf("SYSTEM HINT>>> fail to connect to region: " + ip)
 					delete(client.ipCache, table)
 					break
 				}
-				// call Region.Process rpc again
 				call, err := TimeoutRPC(new_rpcRegion.Go("Region.Process", &input, &result, nil), TIMEOUT_S)
 				if err != nil {
 					fmt.Println("SYSTEM HINT>>> region process timeout")
@@ -280,7 +258,6 @@ func (client *Client) Run() {
 					fmt.Println("SYSTEM HINT>>> can't obatin result, maybe input is error")
 					break
 				}
-				// fmt.Println("result:\n" + result)
 				client.ipCache[table] = new_ip
 				client.rpcRegionMap[new_ip] = new_rpcRegion
 				fmt.Println("SYSTEM HINT>>> update ip: " + ip + " and add " + new_ip + " to iptablemap")
@@ -293,23 +270,19 @@ func (client *Client) Run() {
 	}
 }
 
-// create格式默认正确写法: create table student (name varchar, id int);
-
+//预处理输入的SQL语句，提取出操作类型、表名、索引名、可能发生的错误类型并返回
 func (client *Client) preprocessInput(input string) (TableOp, string, string, error) {
 	input = strings.Trim(input, ";")
-	//初始化四个返回值
 	table := ""
 	index := ""
 	var op TableOp
 	op = OTHERS
 	var err error
 	err = nil
-	//空格替换
 	input = ReplaceAll(input, "\\s+", " ")
 	words := strings.Split(input, " ")
 	if words[0] == "create" {
 		if len(words) < 3 {
-			//无论哪一种create都必须要有3个及以上word
 			err = errors.New("lack of input in create operation")
 			return op, table, index, err
 		}
@@ -317,7 +290,7 @@ func (client *Client) preprocessInput(input string) (TableOp, string, string, er
 		if words[1] == "table" {
 			op = CREATE_TBL
 			table = words[2]
-			if strings.Contains(table, "(") { // 如果被划分成了 student(name varchar, ...)
+			if strings.Contains(table, "(") { 
 				table = table[0:strings.Index(table, "(")]
 			}
 		} else if words[1] == "index" {
@@ -328,7 +301,7 @@ func (client *Client) preprocessInput(input string) (TableOp, string, string, er
 			}
 			index = words[2]
 			table = words[4]
-			if strings.Contains(table, "(") { // 如果被划分成了 student(name)
+			if strings.Contains(table, "(") { 
 				table = table[0:strings.Index(table, "(")]
 			}
 		} else {
