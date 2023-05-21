@@ -7,24 +7,23 @@ import (
 	"net/http"
 	"net/rpc"
 	"time"
-
 	clientv3 "go.etcd.io/etcd/client/v3"
-
 	. "Distributed-MiniSQL/common"
 	"Distributed-MiniSQL/minisql/manager/api"
 )
 
+//定义Region结构体变量
 type Region struct {
-	masterIP string
-	hostIP   string
-	backupIP string
-
-	etcdClient   *clientv3.Client
-	masterClient *rpc.Client
-	backupClient *rpc.Client
+	masterIP string				//master服务器的IP地址
+	hostIP   string				//region服务器的IP地址
+	backupIP string				//该region服务器的从服务器的IP地址
+	etcdClient   *clientv3.Client		//媒介
+	masterClient *rpc.Client		//媒介
+	backupClient *rpc.Client		//媒介
 	fu           FtpUtils
 }
 
+//用于初始化 Region 结构体
 func (region *Region) Init(masterIP, hostIP string) {
 	region.masterIP = masterIP
 	region.hostIP = hostIP
@@ -34,6 +33,7 @@ func (region *Region) Init(masterIP, hostIP string) {
 	api.Initial()
 }
 
+//开启了一个stayOnline()任务，还开启了一个RPC服务任务
 func (region *Region) Run() {
 	// connect to local etcd server
 	region.etcdClient, _ = clientv3.New(clientv3.Config{
@@ -42,14 +42,10 @@ func (region *Region) Run() {
 	})
 	defer region.etcdClient.Close()
 	go region.stayOnline()
-
-	// register rpc
 	rpc.Register(region)
 	rpc.HandleHTTP()
 	l, _ := net.Listen("tcp", REGION_PORT)
 	go http.Serve(l, nil)
-
-	// connect to master
 	client, err := rpc.DialHTTP("tcp", region.masterIP+MASTER_PORT)
 	if err != nil {
 		log.Printf("rpc.DialHTTP err: %v", region.masterIP+MASTER_PORT)
@@ -62,7 +58,7 @@ func (region *Region) Run() {
 	}
 }
 
-// https://pkg.go.dev/go.etcd.io/etcd@v3.3.27+incompatible/clientv3#Lease
+//是一个死循环，通过 etcd 的 lease 功能和 keepAlive 功能来实现在线状态的维护，防止节点宕机后 etcd 上的信息仍残留
 func (region *Region) stayOnline() {
 	for {
 		resp, err := region.etcdClient.Grant(context.Background(), 5)
