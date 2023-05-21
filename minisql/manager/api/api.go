@@ -11,21 +11,15 @@ import (
 	"Distributed-MiniSQL/minisql/manager/recordmanager"
 )
 
+//初始化缓冲管理器、目录管理器、索引管理器
 func Initial() {
-	//错误处理机制
-	//var flag bool = true
-	//error 判定？
-
 	buffermanager.BufferInit()
 	catalogmanager.InitTable()
 	catalogmanager.InitIndex()
 	indexmanager.InitIndex()
-
-	//if flag == false {
-	//	panic(qexception.Qexception{1, 500, "Failed to initialize API!"})
-	//}
 }
 
+//获取所有表
 func GetTables() []string {
 	var tableName map[string]catalogmanager.Table
 	tableName = catalogmanager.GetTables()
@@ -35,11 +29,14 @@ func GetTables() []string {
 	}
 	return res
 }
+
+//保存目录和记录
 func Store() {
 	catalogmanager.StoreCatalog()
 	recordmanager.StoreRecord()
 }
 
+//删除索引
 func DropIndex(indexName string) bool {
 	var index1 index.Index
 	index1 = catalogmanager.GetIndex(indexName)
@@ -50,6 +47,7 @@ func DropIndex(indexName string) bool {
 
 }
 
+//创建表
 func CreateTable(tabName string, tab catalogmanager.Table) bool {
 	if recordmanager.CreateTable(tabName) && catalogmanager.CreateTable(tab) {
 		indexName := tabName + "_index" //refactor index name
@@ -59,13 +57,10 @@ func CreateTable(tabName string, tab catalogmanager.Table) bool {
 		catalogmanager.CreateIndex(index1) //create index on Catalog Manager
 		return true
 	}
-	//	throw new qexception(1, 501, "Table " + tabName + " already exist!")
-	//} catch (IOException e) {
-	//	throw new qexception(1, 502, "Failed to create an index on table " + tabName)
-	//}
 	panic(qexception.Qexception{1, 503, "Failed to create table " + tabName})
 }
 
+//删除表
 func DropTable(tabName string) bool {
 	for i := 0; i < catalogmanager.GetAttributeNum(tabName); i++ {
 		attrName := catalogmanager.GetAttributeName(tabName, i)
@@ -81,6 +76,7 @@ func DropTable(tabName string) bool {
 	}
 }
 
+//创建索引
 func CreateIndex(index index.Index) bool {
 	if indexmanager.CreateIndex(index) && catalogmanager.CreateIndex(index) {
 		return true
@@ -88,6 +84,7 @@ func CreateIndex(index index.Index) bool {
 	panic(qexception.Qexception{1, 506, "Failed to create index " + index.AttributeName + " on table " + index.TableName})
 }
 
+//插入记录
 func InsertRow(tabName string, row condition.TableRow) bool {
 	var recordAddr catalogmanager.Address
 	tmp, _ := recordmanager.Insert(tabName, row) //insert and get return address
@@ -106,8 +103,9 @@ func InsertRow(tabName string, row condition.TableRow) bool {
 	}
 	catalogmanager.AddRowNum(tabName) //update number of records in catalog        return true;
 	return true
-	//error
 }
+
+//删除记录
 func DeleteRow(tabName string, conditions []condition.Condition) int {
 	var condition1 condition.Condition
 	var res bool
@@ -139,6 +137,7 @@ func DeleteRow(tabName string, conditions []condition.Condition) int {
 	return numberIfRecords
 }
 
+//查找记录
 func Select(tabName string, attriName []string, conditions []condition.Condition) []condition.TableRow {
 	var resultSet []condition.TableRow
 	var condition1 condition.Condition
@@ -180,8 +179,7 @@ func Select(tabName string, attriName []string, conditions []condition.Condition
 	}
 }
 
-//vector转为slice实现
-
+//显示索引信息
 func FindIndexCondition(tabName string, conditions []condition.Condition) (bool, condition.Condition) {
 	var condition1 condition.Condition
 	var flag bool = false
