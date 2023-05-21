@@ -12,6 +12,7 @@ import (
 	. "Distributed-MiniSQL/common"
 )
 
+//使用 Etcd 的 Watch API 监听 Etcd 中保存的服务器列表的变化
 func (master *Master) watch() {
 	for {
 		watchChan := master.etcdClient.Watch(context.Background(), "", clientv3.WithPrefix())
@@ -70,12 +71,15 @@ func (master *Master) watch() {
 	}
 }
 
+
+//向 Master 服务器中添加一个Region服务器
 func (master *Master) addRegion(ip string) {
 	log.Printf("add region: %v", ip)
 	temp := make([]string, 0)
 	master.serverTables[ip] = &temp
 }
 
+//向分布式数据库系统中添加一个新的备份服务器，在需要备份的 Region 服务器宕机时，可以提供数据的冗余备份
 func (master *Master) placeBackup(backupIP string) error {
 	for ip := range master.serverTables {
 		_, ok := master.backupInfo[ip]
@@ -98,6 +102,7 @@ func (master *Master) placeBackup(backupIP string) error {
 	return nil
 }
 
+//根据传入的备份地址 IP，在Master服务器中哈希查找并返回对应的Region服务器的IP地址
 func (master *Master) getBackedIP(ip string) (string, bool) {
 	for regionIP, backupIP := range master.backupInfo {
 		if ip == backupIP {
