@@ -10,24 +10,21 @@ import (
 )
 
 const TableFileName = common.DIR + "tableCatalog.txt"
-
-// const TableFileName2 = "./tableCatalog.txt"
 const IndexFileName = common.DIR + "indexCatalog.txt"
-
 var Tables = make(map[string]Table)
 var Indexs = make(map[string]index.Index)
 
-// type Catalogmanager struct{
-
-// }
+//获取所有表
 func GetTables() map[string]Table {
 	return Tables
 }
 
+//获取所有索引
 func GetIndexs() map[string]index.Index {
 	return Indexs
 }
 
+//初始化表
 func InitTable() {
 	file, err := os.Open(TableFileName)
 	if err != nil {
@@ -77,6 +74,7 @@ func InitTable() {
 	fmt.Println("表信息加载成功")
 }
 
+//初始化索引
 func InitIndex() {
 	file, err := os.Open(IndexFileName)
 	if err != nil {
@@ -101,6 +99,7 @@ func InitIndex() {
 	fmt.Println("索引信息文件加载成功")
 }
 
+//保存表
 func StoreTable() {
 	file, err := os.OpenFile(TableFileName, os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0666)
 	if err != nil {
@@ -141,6 +140,7 @@ func StoreTable() {
 	w.Flush() //writer是带缓存的，会先写入缓存中，用词要调用Flush方法
 }
 
+//保存索引
 func StoreIndex() {
 	file, err := os.OpenFile(IndexFileName, os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0666)
 	if err != nil {
@@ -166,16 +166,13 @@ func StoreIndex() {
 	w.Flush()
 }
 
-// func InitCatalog() {
-// 	InitTable()
-// 	InitIndex()
-// }
-
+//保存目录
 func StoreCatalog() {
 	StoreTable()
 	StoreIndex()
 }
 
+//展示所有表
 func ShowTable() {
 	length := 9
 	for _, v := range Tables {
@@ -189,6 +186,7 @@ func ShowTable() {
 	}
 }
 
+//展示所有索引
 func ShowIndex() {
 	idx, tab, attr := 9, 9, 9
 	for _, v := range Indexs {
@@ -208,6 +206,7 @@ func ShowIndex() {
 	}
 }
 
+//判断属性是否是主键
 func IsPrimaryKey(tableName string, attributeName string) bool {
 	value, ok := Tables[tableName]
 	if ok {
@@ -218,6 +217,7 @@ func IsPrimaryKey(tableName string, attributeName string) bool {
 	return false
 }
 
+//判断属性是否唯一
 func IsUnique(tableName string, attributeName string) bool {
 	value, ok := Tables[tableName]
 	if ok {
@@ -233,6 +233,7 @@ func IsUnique(tableName string, attributeName string) bool {
 	return false
 }
 
+//判断属性是否是索引键
 func IsIndexKey(tableName string, attributeName string) bool {
 	value, ok := Tables[tableName]
 	if ok {
@@ -251,6 +252,7 @@ func IsIndexKey(tableName string, attributeName string) bool {
 	return false
 }
 
+//判断属性是否存在于指定表
 func IsAttributeExist(tableName string, attributeName string) bool {
 	value, ok := Tables[tableName]
 	if ok {
@@ -263,6 +265,7 @@ func IsAttributeExist(tableName string, attributeName string) bool {
 	return false
 }
 
+//判断表是否存在
 func IsTableExist(tableName string) bool {
 	_, ok := Tables[tableName]
 	if ok {
@@ -272,6 +275,7 @@ func IsTableExist(tableName string) bool {
 	}
 }
 
+//判断索引是否存在于指定表
 func GetIndexName(tableName string, attribute string) string {
 	value, ok := Tables[tableName]
 	if ok {
@@ -307,6 +311,7 @@ func GetAttributeIndex(tableName string, attributeName string) int {
 	return -1
 }
 
+//获取表中指定名称属性的类型
 func GetAttributeType(tableName string, attributeName string) Datatype {
 	value, ok := Tables[tableName]
 	if ok {
@@ -322,6 +327,7 @@ func GetAttributeType(tableName string, attributeName string) Datatype {
 	return Datatype{}
 }
 
+//获取表中指定名称属性的长度
 func GetLength(tableName string, attribute string) int {
 	value, ok := Tables[tableName]
 	if ok {
@@ -337,27 +343,31 @@ func GetLength(tableName string, attribute string) int {
 	return -1
 }
 
+//获得表中指定序号属性的类型
 func GetType(tableName string, i int) int {
 	return Tables[tableName].AttributeVector[i].FieldType.NumType
 }
 
-//用于recordManager中
+//得到表中指定序号属性的长度
 func GetLength2(tableName string, i int) int {
 	return Tables[tableName].AttributeVector[i].FieldType.length
 }
 
+//增加行数
 func AddRowNum(tableName string) {
 	tmp := Tables[tableName]
 	tmp.RowNum++
 	Tables[tableName] = tmp
 }
 
+//删除行数
 func DeleteRowNum(tableName string, num int) {
 	tmp := Tables[tableName]
 	tmp.RowNum -= num
 	Tables[tableName] = tmp
 }
 
+//更新索引表
 func UpdateIndexTable(indexName string, tempIndex index.Index) bool {
 	_, ok := Indexs[indexName]
 	if !ok { //说明index不存在
@@ -367,6 +377,7 @@ func UpdateIndexTable(indexName string, tempIndex index.Index) bool {
 	return true
 }
 
+//创建表
 func CreateTable(newTable Table) bool {
 	_, ok := Tables[newTable.TableName]
 	if ok {
@@ -376,6 +387,7 @@ func CreateTable(newTable Table) bool {
 	return true
 }
 
+//删除表
 func DropTable(tableName string) bool {
 	_, ok := Tables[tableName]
 	if !ok { //说明Table不存在
@@ -389,6 +401,7 @@ func DropTable(tableName string) bool {
 	return true
 }
 
+//创建索引
 func CreateIndex(newIndex index.Index) bool {
 	_, ok := Indexs[newIndex.TableName]
 	if ok {
@@ -402,6 +415,7 @@ func CreateIndex(newIndex index.Index) bool {
 	return true
 }
 
+//删除索引
 func DropIndex(indexName string) bool {
 	_, ok := Indexs[indexName]
 	if !ok { //说明index不存在
@@ -421,26 +435,32 @@ func DropIndex(indexName string) bool {
 	return true
 }
 
+//获取表
 func GetTable(tableName string) Table {
 	return Tables[tableName]
 }
 
+//获取索引
 func GetIndex(indexName string) index.Index {
 	return Indexs[indexName]
 }
 
+//获取主键
 func GetPrimaryKey(tableName string) string {
 	return Tables[tableName].PrimaryKey
 }
 
+//获取行长
 func GetRowLength(tableName string) int {
 	return Tables[tableName].RowLength
 }
 
+//获取属性数
 func GetAttributeNum(tableName string) int {
 	return Tables[tableName].AttributeNum
 }
 
+//获取行数
 func GetRowNum(tableName string) int {
 	return Tables[tableName].RowNum
 }
