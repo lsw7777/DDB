@@ -3,7 +3,6 @@ package master
 import (
 	"fmt"
 	"log"
-
 	. "Distributed-MiniSQL/common"
 )
 
