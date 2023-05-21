@@ -220,7 +220,7 @@ func ReadBlockFromDiskQuote(filename string, ofs int) *Block {
 	}
 }
 
-//也是从磁盘读出数据块，多了bid变量
+//也是从磁盘读出数据块。bid表示数据块序号值。
 func ReadBlockFromDisk1(filename string, ofs int, bid int) bool {
 	flag := false
 	data := make([]byte, BLOCKSIZE)
@@ -259,6 +259,7 @@ func ReadBlockFromDisk1(filename string, ofs int, bid int) bool {
 	return flag
 }
 
+//向磁盘写入数据块
 func WriteBlockToDisk(bid int) bool {
 	if !buffer[bid].IsDirty {
 		buffer[bid].IsValid = false
@@ -286,6 +287,7 @@ func WriteBlockToDisk(bid int) bool {
 
 }
 
+//获取一个空闲的数据块的序号
 func GetFreeBlockId() int {
 	index := EOF
 	var mincount int = 0x7FFFFFFF
