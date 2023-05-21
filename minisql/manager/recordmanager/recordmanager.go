@@ -11,8 +11,7 @@ import (
 	"strconv"
 )
 
-//Recordmanager类
-
+//创建表语句处理
 func CreateTable(tableName string) bool {
 	file, err := os.OpenFile(common.DIR+tableName, os.O_RDWR|os.O_CREATE, 0666)
 	defer file.Close()
@@ -30,6 +29,7 @@ func CreateTable(tableName string) bool {
 	}
 }
 
+//删除表语句处理
 func DropTable(tableName string) bool {
 	err := os.Remove(common.DIR + tableName)
 	if err != nil {
@@ -40,7 +40,7 @@ func DropTable(tableName string) bool {
 	return true
 }
 
-//第二个返回的布尔值如果为true表示存在异常
+//查找语句处理
 func Select(tableName string, conditions []condition.Condition) ([]condition.TableRow, bool) {
 	tupleNum := catalogmanager.GetRowNum(tableName)
 	storeLen := GetStoreLength(tableName)
@@ -89,6 +89,7 @@ func Select(tableName string, conditions []condition.Condition) ([]condition.Tab
 	return result, false
 }
 
+//插入语句处理
 func Insert(tableName string, data condition.TableRow) (*catalogmanager.Address, bool) {
 	tupleNum := int(catalogmanager.GetRowNum(tableName))
 	headBlock := buffermanager.ReadBlockFromDiskQuote(tableName, 0)
@@ -125,6 +126,9 @@ func Insert(tableName string, data condition.TableRow) (*catalogmanager.Address,
 	return catalogmanager.NewAddress(tableName, blockOffset, byteOffset), false
 
 }
+
+
+//删除语句处理
 func Delete2(address []catalogmanager.Address, conditions []condition.Condition) (int, bool) {
 	if len(address) == 0 {
 		return 0, false
@@ -185,6 +189,7 @@ func Delete2(address []catalogmanager.Address, conditions []condition.Condition)
 
 }
 
+//删除语句处理
 func Delete(tableName string, conditions []condition.Condition) (int, bool) {
 	tupleNum := catalogmanager.GetRowNum(tableName)
 	storeLen := GetStoreLength(tableName)
@@ -243,10 +248,12 @@ func Delete(tableName string, conditions []condition.Condition) (int, bool) {
 	return deleteNum, false
 }
 
+//交换地址
 func Swap(i, j *catalogmanager.Address) {
 	*i, *j = *j, *i
 }
 
+//地址排序
 func sortAddress(a *([]catalogmanager.Address)) {
 	for i := 0; i < len(*a); i++ {
 		for j := i + 1; j < len(*a); j++ {
@@ -256,6 +263,8 @@ func sortAddress(a *([]catalogmanager.Address)) {
 		}
 	}
 }
+
+//查找语句处理
 func Select2(address []catalogmanager.Address, conditions []condition.Condition) (*([]condition.TableRow), bool) {
 	if len(address) == 0 {
 		return nil, false
@@ -300,6 +309,8 @@ func Select2(address []catalogmanager.Address, conditions []condition.Condition)
 	return &result, false
 }
 
+
+//展示语句处理
 func Project(tableName string, result []condition.TableRow, projectName []string) ([]condition.TableRow, bool) {
 	var projectResult []condition.TableRow
 	for i := 0; i < len(result); i++ {
@@ -319,9 +330,12 @@ func Project(tableName string, result []condition.TableRow, projectName []string
 	return projectResult, false
 }
 
+//保存记录
 func StoreRecord() {
 	buffermanager.DestructBufferManager()
 }
+
+//获得存储长度
 func GetStoreLength(tableName string) int {
 	rowLen := catalogmanager.GetRowLength(tableName)
 	if rowLen > 4 {
@@ -331,6 +345,7 @@ func GetStoreLength(tableName string) int {
 	}
 }
 
+//获得数据块偏移量
 func GetBlockOffset(tableName string, tupleOffset int) int {
 	storeLen := GetStoreLength(tableName)
 	tupleInFirst := (buffermanager.BLOCKSIZE - 4) / storeLen
@@ -342,6 +357,7 @@ func GetBlockOffset(tableName string, tupleOffset int) int {
 	}
 }
 
+获得字节偏移量
 func GetByteOffset(tableName string, tupleOffset int) int {
 	storeLen := GetStoreLength(tableName)
 	tupleInFirst := (buffermanager.BLOCKSIZE - 4) / storeLen
@@ -354,6 +370,7 @@ func GetByteOffset(tableName string, tupleOffset int) int {
 	}
 }
 
+//获得元组的偏移量
 func GetTupleOffset(tableName string, blockOffset int, byteOffset int) int {
 	storeLen := GetStoreLength(tableName)
 	tupleInFirst := (buffermanager.BLOCKSIZE - 4) / storeLen
@@ -365,6 +382,7 @@ func GetTupleOffset(tableName string, blockOffset int, byteOffset int) int {
 	}
 }
 
+//获得元组
 func GetTuple(tableName string, block buffermanager.Block, offset int) *condition.TableRow {
 	attributeNum := catalogmanager.GetAttributeNum(tableName)
 	var attributeValue string
@@ -392,6 +410,7 @@ func GetTuple(tableName string, block buffermanager.Block, offset int) *conditio
 	return result
 }
 
+
 func rmu0000(s string) string {
 	str := make([]rune, 0, len(s))
 	for _, v := range []rune(s) {
@@ -402,6 +421,8 @@ func rmu0000(s string) string {
 	}
 	return string(str)
 }
+
+//写入元组
 func WriteTuples(tableName string, data condition.TableRow, block *buffermanager.Block, offset int) {
 	attributeNum := catalogmanager.GetAttributeNum(tableName)
 	block.WriteByte(offset, 0xFF)
@@ -427,6 +448,7 @@ func WriteTuples(tableName string, data condition.TableRow, block *buffermanager
 	}
 }
 
+//检查行的合法性
 func CheckRow(tableName string, data condition.TableRow) bool {
 	if catalogmanager.GetAttributeNum(tableName) != data.GetAttributeSize() {
 		fmt.Printf("Attribute number mismatch")
@@ -442,6 +464,7 @@ func CheckRow(tableName string, data condition.TableRow) bool {
 	return true
 }
 
+//检查状态的合法性
 func CheckCondition(tableName string, conditions []condition.Condition) bool {
 	for i := 0; i < len(conditions); i++ {
 		index := catalogmanager.GetAttributeIndex(tableName, conditions[i].Name)
@@ -457,6 +480,7 @@ func CheckCondition(tableName string, conditions []condition.Condition) bool {
 	return true
 }
 
+//检查类型的合法性
 func CheckType(type1 int, length int, value string) bool {
 	switch type1 {
 	case 2:
