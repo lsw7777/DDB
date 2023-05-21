@@ -11,7 +11,7 @@ type Datatype struct {
 }
 
 //定义新的数据类型
-func NewDatatype(NumType int, length int) *Datatype { 、
+func NewDatatype(NumType int, length int) *Datatype { 
 	if NumType == 1 {
 		return &Datatype{NumType: 1, length: length}
 	}
