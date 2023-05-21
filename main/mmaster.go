@@ -6,6 +6,7 @@ import (
 	"strconv"
 )
 
+//主函数，开启master
 func main() {
 	var master Master
 	regionCount, _ := strconv.ParseInt(os.Args[1], 10, 0)
