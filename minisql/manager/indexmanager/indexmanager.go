@@ -12,10 +12,9 @@ import (
 	"strconv"
 )
 
-//TreeMap保存已建立的B+树的信息
+
 var TreeMap = make(map[string]BPTree)
 
-//initialIndex函数,与catalogmanager中的略有不同
 func InitIndex() {
 	FileName := common.DIR + "indexCatalog.txt"
 	file, err := os.Open(FileName)
@@ -42,7 +41,7 @@ func InitIndex() {
 }
 
 func CreateIndex(idx index.Index) bool {
-	fileName := common.DIR + idx.IndexName + ".index" //只是建立了一个索引文件，实际上的内容只保存在内存中，而没有存到文件里
+	fileName := common.DIR + idx.IndexName + ".index" 
 	BuildIndex(idx)
 	file, err := os.OpenFile(fileName, os.O_WRONLY|os.O_CREATE, 0666)
 	if err != nil {
@@ -87,12 +86,12 @@ func BuildIndex(idx index.Index) {
 	// dataType := catalogmanager.GetType(tableName, IndexNum)
 	block := buffermanager.ReadBlockFromDiskQuote(tableName, 0)
 	for processNum < tupleNum {
-		if byteOffset+tupleLength >= buffermanager.BLOCKSIZE { //寻找下一个block
+		if byteOffset+tupleLength >= buffermanager.BLOCKSIZE { 
 			blockOffset++
-			byteOffset = 0 //重置byteOffset
+			byteOffset = 0 
 			block = buffermanager.ReadBlockFromDiskQuote(tableName, blockOffset)
 			if block == nil {
-				//抛出异常，RuntimeException
+				
 			}
 		}
 		if block.ReadInteger(byteOffset) < 0 {
@@ -139,7 +138,7 @@ func Select(idx index.Index, cond condition.Condition) []catalogmanager.Address 
 	} else if operator == "<=" {
 		return tree.FindLeq(value)
 	} else {
-		//抛出异常
+		
 	}
 	return []catalogmanager.Address{}
 }
@@ -147,7 +146,7 @@ func Select(idx index.Index, cond condition.Condition) []catalogmanager.Address 
 func Delete(idx index.Index, key string) {
 	tree := TreeMap[idx.IndexName]
 	indexNum := catalogmanager.GetAttributeIndex(idx.TableName, idx.AttributeName)
-	Datatype := catalogmanager.GetType(idx.TableName, indexNum) //类型
+	Datatype := catalogmanager.GetType(idx.TableName, indexNum) 
 	var value interface{}
 	if Datatype == 1 { //char
 		value = key
@@ -162,7 +161,7 @@ func Delete(idx index.Index, key string) {
 func Insert(idx index.Index, key string, value catalogmanager.Address) {
 	tree := TreeMap[idx.IndexName]
 	indexNum := catalogmanager.GetAttributeIndex(idx.TableName, idx.AttributeName)
-	Datatype := catalogmanager.GetType(idx.TableName, indexNum) //类型
+	Datatype := catalogmanager.GetType(idx.TableName, indexNum) 
 	var value1 interface{}
 	if Datatype == 1 { //char
 		value1 = key
@@ -177,7 +176,7 @@ func Insert(idx index.Index, key string, value catalogmanager.Address) {
 func Update(idx index.Index, key string, value catalogmanager.Address) {
 	tree := TreeMap[idx.IndexName]
 	indexNum := catalogmanager.GetAttributeIndex(idx.TableName, idx.AttributeName)
-	Datatype := catalogmanager.GetType(idx.TableName, indexNum) //类型
+	Datatype := catalogmanager.GetType(idx.TableName, indexNum) 
 	var value1 interface{}
 	if Datatype == 1 { //char
 		value1 = key
@@ -189,7 +188,7 @@ func Update(idx index.Index, key string, value catalogmanager.Address) {
 	tree.Insert(value1, value)
 }
 
-//一条元组需要多长来存储
+
 func GetStoreLength(tableName string) int {
 	rowLen := catalogmanager.GetRowLength(tableName)
 	if rowLen > 4 { // a valid byte
@@ -204,19 +203,17 @@ func GetTuple(tableName string, block buffermanager.Block, offset int) []interfa
 	var attributeValue interface{}
 	var result []interface{}
 
-	offset++ //跳过第一个标志位
+	offset++ 
 	for i := 0; i < attributeNum; i++ {
 		length := catalogmanager.GetLength2(tableName, i)
 		datatype := catalogmanager.GetType(tableName, i)
-		if datatype == 1 { //char
+		if datatype == 1 { 
 			attributeValue = block.ReadString(offset, length)
 
 			attributeValue = rmu0000(attributeValue.(string))
-		} else if datatype == 2 { //int
-			//attributeValue = strconv.FormatInt(int64(block.ReadInteger(offset)), 10) //写入int
+		} else if datatype == 2 { 
 			attributeValue = int(block.ReadInteger(offset))
-		} else if datatype == 3 { //float
-			//attributeValue = strconv.FormatFloat(float64(block.ReadFloat(offset)), 'f', 5, 64)
+		} else if datatype == 3 { /
 			attributeValue = float32(block.ReadFloat(offset))
 		}
 		offset += length
@@ -235,31 +232,3 @@ func rmu0000(s string) string {
 	}
 	return string(str)
 }
-
-//func GetTuple(tableName string, block buffermanager.Block, offset int) condition.TableRow {
-//	attributeNum := catalogmanager.GetAttributeNum(tableName)
-//	result := condition.NewTableRow([]string{})
-//	var attributeValue string
-//
-//	offset++ //跳过第一个标志位
-//	for i := 0; i < attributeNum; i++ {
-//		length := catalogmanager.GetLength2(tableName, i)
-//		datatype := catalogmanager.GetType(tableName, i)
-//		if datatype == 1 { //char
-//			attributeValue = block.ReadString(offset, length)
-//			first := strings.Index(attributeValue, string([]byte{0x00})) //存疑
-//			if first == -1 {
-//				first = len(attributeValue)
-//			}
-//			attributeValue = attributeValue[0:first] //存疑
-//		} else if datatype == 2 { //int
-//			attributeValue = strconv.FormatInt(int64(block.ReadInteger(offset)), 10) //写入int
-//			//attributeValue = int(block.ReadInteger(offset))
-//		} else if datatype == 3 { //float
-//			attributeValue = strconv.FormatFloat(float64(block.ReadFloat(offset)), 'f', 5, 64)
-//		}
-//		offset += length
-//		result.AddAttributeValue(attributeValue)
-//	}
-//	return *result
-//}
