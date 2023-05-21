@@ -213,7 +213,7 @@ func GetTuple(tableName string, block buffermanager.Block, offset int) []interfa
 			attributeValue = rmu0000(attributeValue.(string))
 		} else if datatype == 2 { 
 			attributeValue = int(block.ReadInteger(offset))
-		} else if datatype == 3 { /
+		} else if datatype == 3 { 
 			attributeValue = float32(block.ReadFloat(offset))
 		}
 		offset += length
