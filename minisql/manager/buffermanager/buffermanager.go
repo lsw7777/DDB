@@ -10,6 +10,7 @@ import (
 
 const BLOCKSIZE = 4096
 
+//定义数据块结构体变量
 type Block struct {
 	LRUCount    int
 	BlockOffset int
@@ -20,10 +21,12 @@ type Block struct {
 	BlockData   []byte
 }
 
+//分配新的数据块
 func NewBlock() *Block {
 	return &Block{LRUCount: 0, BlockOffset: 0, IsDirty: false, IsValid: false, IsLocked: false, BlockData: make([]byte, BLOCKSIZE)}
 }
 
+//写入数据
 func (b *Block) WriteData(offset int, data []byte) bool {
 	if offset+len(data) > BLOCKSIZE {
 		return false
@@ -36,6 +39,7 @@ func (b *Block) WriteData(offset int, data []byte) bool {
 	return true
 }
 
+//将模式各变量设为0
 func (b *Block) ResetModes() {
 	b.IsDirty = false
 	b.IsLocked = false
@@ -43,6 +47,7 @@ func (b *Block) ResetModes() {
 	b.LRUCount = 0
 }
 
+//读取整数
 func (b *Block) ReadInteger(offset int) int32 {
 	if offset+4 > BLOCKSIZE {
 		return 0
@@ -55,8 +60,7 @@ func (b *Block) ReadInteger(offset int) int32 {
 	return (b0 << 24) | (b1 << 16) | (b2 << 8) | b3
 }
 
-//func (b *Block) ReadByte(offset)int32{}
-
+//写入字节
 func (b *Block) WriteByte(offset int, value byte) bool {
 	if offset+1 > BLOCKSIZE {
 		return false
@@ -66,6 +70,7 @@ func (b *Block) WriteByte(offset int, value byte) bool {
 	return true
 }
 
+//写入整数
 func (b *Block) WriteInteger(offset int, value int32) bool {
 	if offset+4 > BLOCKSIZE {
 		return false
@@ -79,17 +84,20 @@ func (b *Block) WriteInteger(offset int, value int32) bool {
 	return true
 }
 
+//读取浮点数
 func (b *Block) ReadFloat(offset int) float32 {
 	var dat int32 = b.ReadInteger(offset)
 	return *(*float32)(unsafe.Pointer(&dat))
 }
 
+//写入浮点数
 func (b *Block) WriteFloat(offset int, value float32) bool {
 	var dat int32 = *(*int32)(unsafe.Pointer(&value))
 	b.IsDirty = true
 	return b.WriteInteger(offset, dat)
 }
 
+//读取字符串
 func (b *Block) ReadString(offset int, length int) string {
 	var buf []byte = make([]byte, length)
 	for i := 0; i < length && (i < BLOCKSIZE-offset); i++ {
@@ -99,6 +107,7 @@ func (b *Block) ReadString(offset int, length int) string {
 	return string(buf)
 }
 
+//写入字符串
 func (b *Block) WriteString(offset int, str string) bool {
 	var buf []byte = []byte(str)
 	if offset+len(buf) > BLOCKSIZE {
@@ -112,23 +121,25 @@ func (b *Block) WriteString(offset int, str string) bool {
 	return true
 }
 
+//给数据块赋初值
 func (b *Block) SetBlockData() {
 	for i := 0; i < len(b.BlockData); i++ {
 		b.BlockData[i] = 0
 	}
-
 }
 
 var MAXBLOCKNUM int = 50
 var EOF int = -1
 var buffer []Block = make([]Block, MAXBLOCKNUM)
 
+//缓冲器初始化
 func BufferInit() {
 	for i := 0; i < MAXBLOCKNUM; i++ {
 		buffer[i] = *NewBlock()
 	}
 }
 
+//测试接口
 func TestInterFace() {
 	b := NewBlock()
 	b.WriteInteger(1200, 2245)
@@ -140,6 +151,7 @@ func TestInterFace() {
 	WriteBlockToDisk(1)
 }
 
+//销毁缓冲管理器
 func DestructBufferManager() {
 	for i := 0; i < MAXBLOCKNUM; i++ {
 		if buffer[i].IsValid {
@@ -148,6 +160,7 @@ func DestructBufferManager() {
 	}
 }
 
+//使某文件不可用（锁定）
 func MakeInvalid(filename string) {
 	for i := 0; i < MAXBLOCKNUM; i++ {
 		if buffer[i].FileName == filename {
@@ -156,6 +169,7 @@ func MakeInvalid(filename string) {
 	}
 }
 
+//从磁盘读出数据块
 func ReadBlockFromDisk(filename string, ofs int) int {
 	for i := 0; i < MAXBLOCKNUM; i++ {
 		if buffer[i].IsValid && buffer[i].FileName == filename && buffer[i].BlockOffset == ofs {
@@ -178,6 +192,7 @@ func ReadBlockFromDisk(filename string, ofs int) int {
 	return bid
 }
 
+//从磁盘队列读出数据块
 func ReadBlockFromDiskQuote(filename string, ofs int) *Block {
 	i := 0
 	for ; i < MAXBLOCKNUM; i++ {
@@ -205,7 +220,7 @@ func ReadBlockFromDiskQuote(filename string, ofs int) *Block {
 	}
 }
 
-//三个变量的是disk1，2个变量的是disk
+//也是从磁盘读出数据块，多了bid变量
 func ReadBlockFromDisk1(filename string, ofs int, bid int) bool {
 	flag := false
 	data := make([]byte, BLOCKSIZE)
