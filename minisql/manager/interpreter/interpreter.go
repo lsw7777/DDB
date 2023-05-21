@@ -26,6 +26,7 @@ const NONEXIST int = -1
 
 var OPERATOR = []string{"<>", "<=", ">=", "=", "<", ">"}
 
+//展示类SQL语句
 func parseShow(statement string) {
 	dataType := strings.Trim(substring(statement, "show", ""), " ")
 	if dataType == "tables" {
@@ -37,12 +38,13 @@ func parseShow(statement string) {
 	}
 }
 
-//简化连续正则替换需要多个编译语句的问题
+//替换字符串
 func replaceString(src string, replacement string, reg string) string {
 	regexp1, _ := regexp.Compile(reg)
 	return regexp1.ReplaceAllString(src, replacement)
 }
 
+//插入类SQL语句
 func parseInsert(statement string) string {
 	statement = replaceString(statement, " (", " *\\( *")
 	statement = replaceString(statement, ") ", " *\\) *")
@@ -141,6 +143,7 @@ func parseInsert(statement string) string {
 	return result.String()
 }
 
+//判断字符串是否以引号开头和结尾
 func whetheryinhao(str string) bool {
 	var flag bool = false
 	if string(str[0]) == "\"" && string(str[len(str)-1]) == "\"" {
@@ -151,6 +154,7 @@ func whetheryinhao(str string) bool {
 	return flag
 }
 
+//寻找子字符串
 func substring(str string, start string, end string) string {
 	regex := start + "(.*)" + end
 	r := regexp.MustCompile(regex)
@@ -162,9 +166,8 @@ func substring(str string, start string, end string) string {
 	}
 }
 
-// line 590 convert 不需要了
-//
 
+//在字符串数组中查找字符串
 func contains(str string, reg []string) int {
 	for i := 0; i < len(reg); i++ {
 		if strings.Contains(str, reg[i]) {
@@ -174,6 +177,7 @@ func contains(str string, reg []string) int {
 	return NONEXIST
 }
 
+//创建状态
 func createCondition(conSet []string) []condition.Condition {
 	var c []condition.Condition
 	for i := 0; i < len(conSet); i++ {
@@ -191,14 +195,7 @@ func createCondition(conSet []string) []condition.Condition {
 	return c
 }
 
-//没用到
-//func checkType(attr string, flag bool) bool {
-//	return true
-//}
-
-// line 613
-
-// line 620 需要record的接口
+//打印行
 func printRow(row condition.TableRow) {
 	for i := 0; i < row.GetAttributeSize(); i++ {
 		fmt.Println(row.GetAttributeValue(i) + "\t")
@@ -206,6 +203,7 @@ func printRow(row condition.TableRow) {
 	fmt.Println()
 }
 
+//获得最大属性长度
 func getMaxAttrLength(tab []condition.TableRow, index int) int {
 	length := 0
 	for i := 0; i < len(tab); i++ {
@@ -218,6 +216,7 @@ func getMaxAttrLength(tab []condition.TableRow, index int) int {
 	return length
 }
 
+//打印多行
 func printRows(tab []condition.TableRow, tabName string) string {
 	var result strings.Builder
 	if len(tab) == 0 {
@@ -271,113 +270,7 @@ func printRows(tab []condition.TableRow, tabName string) string {
 	return result.String()
 }
 
-//func bufInterpret(reader *bufio.Reader) string {
-//	restState := ""
-//	for true {
-//		var returnValue, statement strings.Builder
-//		var index1 int
-//		if strings.Contains(restState, ";") {
-//			index1 = strings.Index(restState, ";")
-//			statement.WriteString(restState[0:index1])
-//			restState = restState[index1+1:]
-//		} else {
-//			statement.WriteString(restState)
-//			statement.WriteString(" ")
-//			if execFile == 0 {
-//				fmt.Println("MiniSQL-->")
-//			}
-//			for true {
-//				lineByte, _, _ := reader.ReadLine()
-//				line := string(lineByte)
-//				if line == "" {
-//					break
-//				} else if strings.Contains(line, ";") {
-//					index1 = strings.Index(line, ";")
-//					statement.WriteString(line[0:index1])
-//					restState = line[index1+1:]
-//					break
-//				} else {
-//					statement.WriteString(line)
-//					statement.WriteString(" ")
-//					if execFile == 0 {
-//						fmt.Println("MiniSQL-->")
-//					}
-//				}
-//			}
-//		}
-//		result := strings.Trim(statement.String(), " ")
-//		result = replaceString(result, " ", "\\s+")
-//		var tokens []string
-//		tokens = strings.Split(result, " ")
-//
-//		if len(tokens) == 1 && tokens[0] == "" {
-//			panic(qexception.Qexception{0, 200, "No statement specified"})
-//		}
-//		switch tokens[0] { //match keyword
-//		case "create":
-//			if len(tokens) == 1 {
-//				panic(qexception.Qexception{0, 201, "Can't find create object"})
-//			}
-//			switch tokens[1] {
-//			case "table":
-//				parseCreateTable(result)
-//				break
-//			case "index":
-//				parseCreateIndex(result)
-//				break
-//			default:
-//				panic(qexception.Qexception{0, 202, "Can't identify " + tokens[1]})
-//			}
-//			break
-//		case "drop":
-//			if len(tokens) == 1 {
-//				panic(qexception.Qexception{0, 203, "Can't find drop object"})
-//			}
-//			switch tokens[1] {
-//			case "table":
-//				parseDropTable(result)
-//				break
-//			case "index":
-//				parseDropIndex(result)
-//				break
-//			default:
-//				panic(qexception.Qexception{0, 204, "Can't identify " + tokens[1]})
-//			}
-//			break
-//		case "select":
-//			returnValue.WriteString(parseSelect(result))
-//			break
-//		case "insert":
-//			parseInsert(result)
-//			break
-//		case "delete":
-//			parseDelete(result)
-//			break
-//		case "quit":
-//			parseQuit(result)
-//			break
-//		case "execfile":
-//			parseSQLFile(result)
-//			break
-//		case "show":
-//			parseShow(result)
-//			break
-//		default:
-//			panic(qexception.Qexception{0, 205, "Can't identify " + tokens[0]})
-//		}
-//		//} catch (QException e) {
-//		//    System.out.println(e.status + " " + QException.ex[e.type] + ": " + e.msg);
-//		//} catch (Exception e) {
-//		//    System.out.println("Default error: " + e.getMessage());
-//		//}
-//
-//		return returnValue.String()
-//	}
-//	//用不到
-//	return ""
-//}
-
-// line 39
+//解释器
 func Interpret(sql string) string {
 	sql = sql[0 : len(sql)-1]
 	resultValue := ""
@@ -393,7 +286,6 @@ func Interpret(sql string) string {
 		}
 
 	}()
-	//自定义的错误处理机制
 	if len(tokens) == 1 && tokens[0] == "" {
 		panic(qexception.Qexception{0, 200, "No statement specified"})
 	}
@@ -452,8 +344,8 @@ func Interpret(sql string) string {
 	return resultValue
 }
 
-//另一个私有的非静态interpret函数
 
+//删除类SQL语句处理
 func parseDelete(statement string) string {
 	//delete from [tabName] where []
 	var result strings.Builder
@@ -478,6 +370,7 @@ func parseDelete(statement string) string {
 	return result.String()
 }
 
+//创建表类SQL语句处理
 func parseCreateTable(statement string) string {
 	statement = replaceString(statement, " (", " *\\( *")
 	statement = replaceString(statement, ") ", " *\\) *")
@@ -604,6 +497,7 @@ func parseCreateTable(statement string) string {
 
 }
 
+//删除表类SQL语句处理
 func parseDropTable(statement string) string {
 	var tokens []string
 	tokens = strings.Split(statement, " ")
@@ -620,6 +514,7 @@ func parseDropTable(statement string) string {
 	return "-->Drop table " + tableName + " successfully!"
 }
 
+//创建索引类SQL语句处理
 func parseCreateIndex(statement string) string {
 	statement = replaceString(statement, " ", "\\s+")
 	statement = replaceString(statement, " (", " *\\( *")
@@ -663,6 +558,7 @@ func parseCreateIndex(statement string) string {
 	return "-->Create index " + indexName + " successfully!"
 }
 
+//删除索引类SQL语句处理
 func parseDropIndex(statement string) string {
 	var tokens []string
 	tokens = strings.Split(statement, " ")
@@ -678,8 +574,7 @@ func parseDropIndex(statement string) string {
 	return "-->Drop index " + indexName + " successfully!"
 }
 
-// line 582
-
+//查找类SQL语句处理
 func parseSelect(statement string) string {
 	//select ... from ... where ...
 	attrStr := substring(statement, "select ", " from")
@@ -844,6 +739,7 @@ func parseSelect(statement string) string {
 
 }
 
+//退出类SQL语句处理
 func parseQuit(statement string) {
 	var tokens []string
 	tokens = strings.Split(statement, " ")
@@ -855,6 +751,7 @@ func parseQuit(statement string) {
 	os.Exit(0)
 }
 
+//执行文件类SQL语句处理
 func parseSQLFile(statement string) {
 	tokens := strings.Split(statement, " ")
 	if len(tokens) != 2 {
