@@ -6,9 +6,7 @@ import (
 	"net/http"
 	"net/rpc"
 	"time"
-
 	clientv3 "go.etcd.io/etcd/client/v3"
-
 	. "Distributed-MiniSQL/common"
 )
 
