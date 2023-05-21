@@ -5,10 +5,8 @@ import (
 	"fmt"
 	"log"
 	"net/rpc"
-
 	"go.etcd.io/etcd/api/v3/mvccpb"
 	clientv3 "go.etcd.io/etcd/client/v3"
-
 	. "Distributed-MiniSQL/common"
 )
 
