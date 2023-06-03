@@ -81,17 +81,17 @@ git clone https://github.com/lsw7777/DDB
 
 二、运行
 
-0.	显示ip
+0.显示ip
 #让每个docker的终端显示ip，模拟不同主机
 hostname -I
 
 
-1.	开启ftp
+1.开启ftp
 #在每个region中开启ftp
 vsftpd
 
 
-2.	开启etcd
+2.开启etcd
 #在每个master和region中都开启etcd
 #master
 export THIS_NAME=host0
@@ -124,7 +124,7 @@ cd /home/lsw/DDB
 ./scripts/etcd.sh
 
 
-3.	开启master和region
+3.开启master和region
 
 #master
 export THIS_NAME=host0
@@ -157,7 +157,7 @@ cd /home/lsw/DDB
 ./scripts/region.sh
 
 
-4.	开启client
+4.开启client
 #在一个region上开启
 cd /home/lsw/DDB
 ./scripts/client.sh
