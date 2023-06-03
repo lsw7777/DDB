@@ -24,40 +24,49 @@ docker start my_debian_4
 docker exec -it my_debian_4 /bin/bash
 
 #安装git
+
 apt-get update  
 apt-get install git  
 git
 
 #安装vsftpd
+
 apt-get update
 apt-get install vsftpd
 
 #安装wget
+
 apt-get update
 apt-get install wget
 
 #安装go1.17
+
 wget https://mirrors.ustc.edu.cn/golang/go1.17.linux-amd64.tar.gz
 tar -C /usr/local -xzf go1.17.linux-amd64.tar.gz
 export PATH=$PATH:/usr/local/go/bin
 go version
 
 #增加用户，后面还需要输入密码等信息
+
 adduser lsw
 lsw
 
 #进入docker文件，删除对应行
+
 编辑/etc/vsftpd.conf，把下面这行的注释去掉。
 write_enable=YES
 
 #建立文件夹
+
 mkdir /var/run/vsftpd
 mkdir /var/run/vsftpd/empty
 
 #引入网络代理，否则内网外网不能联通
+
 export GOPROXY=https://goproxy.io,direct
 
 #编译ectd,产生bin文件夹即成功
+
 cd ~
 git clone -b v3.4.16 https://github.com/etcd-io/etcd.git
 cd etcd
@@ -66,6 +75,7 @@ ls
 export PATH="$PATH:`pwd`/bin"
 
 #拷贝git库
+
 cd /home/lsw
 git clone https://github.com/lsw7777/DDB
 
