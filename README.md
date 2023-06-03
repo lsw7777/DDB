@@ -67,7 +67,7 @@ export PATH="$PATH:`pwd`/bin"
 
 #拷贝git库
 cd /home/lsw
-git clone https://github.com/YunzeTong/Distributed-MiniSQL
+git clone https://github.com/lsw7777/DDB
 
 二、运行
 
@@ -86,31 +86,31 @@ vsftpd
 #master
 export THIS_NAME=host0
 export THIS_IP=172.18.0.2
-cd /home/lsw/Distributed-MiniSQL
+cd /home/lsw/DDB
 ./scripts/etcd.sh
 
 #region_1
 export THIS_NAME=host1
 export THIS_IP=172.18.0.3
-cd /home/lsw/Distributed-MiniSQL
+cd /home/lsw/DDB
 ./scripts/etcd.sh
 
 #region_2
 export THIS_NAME=host2
 export THIS_IP=172.18.0.4
-cd /home/lsw/Distributed-MiniSQL
+cd /home/lsw/DDB
 ./scripts/etcd.sh
 
 #region_3
 export THIS_NAME=host3
 export THIS_IP=172.18.0.5
-cd /home/lsw/Distributed-MiniSQL
+cd /home/lsw/DDB
 ./scripts/etcd.sh
 
 #region_4
 export THIS_NAME=host4
 export THIS_IP=172.18.0.6
-cd /home/lsw/Distributed-MiniSQL
+cd /home/lsw/DDB
 ./scripts/etcd.sh
 
 
@@ -119,37 +119,37 @@ cd /home/lsw/Distributed-MiniSQL
 #master
 export THIS_NAME=host0
 export THIS_IP=172.18.0.2
-cd /home/lsw/Distributed-MiniSQL
+cd /home/lsw/DDB
 ./scripts/master.sh
 
 #region_1
 export THIS_NAME=host1
 export THIS_IP=172.18.0.3
-cd /home/lsw/Distributed-MiniSQL
+cd /home/lsw/DDB
 ./scripts/region.sh
 
 #region_2
 export THIS_NAME=host2
 export THIS_IP=172.18.0.4
-cd /home/lsw/Distributed-MiniSQL
+cd /home/lsw/DDB
 ./scripts/region.sh
 
 #region_3
 export THIS_NAME=host3
 export THIS_IP=172.18.0.5
-cd /home/lsw/Distributed-MiniSQL
+cd /home/lsw/DDB
 ./scripts/region.sh
 
 #region_4
 export THIS_NAME=host4
 export THIS_IP=172.18.0.6
-cd /home/lsw/Distributed-MiniSQL
+cd /home/lsw/DDB
 ./scripts/region.sh
 
 
 4.	开启client
-
-cd /home/lsw/Distributed-MiniSQL
+#在一个region上开启
+cd /home/lsw/DDB
 ./scripts/client.sh
 
 
